@@ -1,0 +1,12 @@
+import { Router } from 'express';
+import { createProject, deleteProject, listProjects, updateProject } from '../controllers/project.controller.js';
+import { authenticate, allowRoles } from '../middlewares/auth.js';
+import { validate } from '../middlewares/validate.js';
+import { projectSchema } from '../validators/project.validator.js';
+const router = Router();
+router.use(authenticate);
+router.get('/', listProjects);
+router.post('/', allowRoles('ADMIN','MANAGER'), validate(projectSchema), createProject);
+router.put('/:id', allowRoles('ADMIN','MANAGER'), validate(projectSchema), updateProject);
+router.delete('/:id', allowRoles('ADMIN','MANAGER'), deleteProject);
+export default router;

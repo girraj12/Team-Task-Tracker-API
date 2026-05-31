@@ -5,6 +5,7 @@ import { checkDatabaseConnection } from "./config/db.js";
 import { initializeRedis } from "./config/redis.js";
 import authRoutes from "./routes/auth.routes.js";
 import userRoutes from "./routes/user.routes.js"
+import projectRoutes from "./routes/project.routes.js"
 
 const port = process.env.PORT || 3000;
 import { errorHandler, notFound } from "./middlewares/errorHandler.js";
@@ -29,6 +30,7 @@ const startServer = async () => {
 
     app.use("/api/auth", authRoutes);
     app.use("/api/users", userRoutes);
+    app.use("/api/projects", projectRoutes);
 
     app.listen(port, () => {
       console.log(`Team Task Tracker API running on PORT ${port}`);
