@@ -3,8 +3,10 @@ import express from "express";
 import cors from "cors";
 import { checkDatabaseConnection } from "./config/db.js";
 import { initializeRedis } from "./config/redis.js";
+import authRoutes from "./routes/auth.routes.js";
 
 const port = process.env.PORT || 3000;
+import { errorHandler, notFound } from "./middlewares/errorHandler.js";
 
 const startServer = async () => {
   try {
@@ -23,6 +25,8 @@ const startServer = async () => {
         message: "Team Task Tracker API is running"
       });
     });
+
+    app.use("/api/auth", authRoutes);
 
     app.listen(port, () => {
       console.log(`Team Task Tracker API running on PORT ${port}`);
