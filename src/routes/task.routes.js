@@ -1,0 +1,15 @@
+import { Router } from 'express';
+import { analytics, changeStatus, createTask, deleteTask, getTask, listTasks, updateTask } from '../controllers/task.controller.js';
+import { authenticate, allowRoles } from '../middlewares/auth.js';
+import { validate } from '../middlewares/validate.js';
+import { statusSchema, taskCreateSchema, taskListSchema, taskUpdateSchema } from '../validators/task.validator.js';
+const router = Router();
+router.use(authenticate);
+router.get('/analytics/overdue', allowRoles('ADMIN','MANAGER'), analytics);
+router.get('/', validate(taskListSchema, 'query'), listTasks);
+router.post('/', allowRoles('ADMIN','MANAGER'), validate(taskCreateSchema), createTask);
+router.get('/:id', getTask);
+router.patch('/:id', allowRoles('ADMIN','MANAGER'), validate(taskUpdateSchema), updateTask);
+router.patch('/:id/status', validate(statusSchema), changeStatus);
+router.delete('/:id', allowRoles('ADMIN','MANAGER'), deleteTask);
+export default router;
