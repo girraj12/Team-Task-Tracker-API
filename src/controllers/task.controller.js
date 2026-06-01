@@ -38,7 +38,7 @@ export const createTask = asyncHandler(async (req, res) => {
 
   await invalidateTaskListCache(req.user.org, req.body.assigneeId);
   res.status(201).json({ 
-    id: r.insertId, 
+    id: result.insertId, 
     message: 'Task created' 
   });
 });
@@ -110,18 +110,25 @@ export const updateTask = asyncHandler(async (req, res) => {
   vals.push(req.params.id, req.user.org);
   await pool.query(`UPDATE tasks SET ${fields.join(', ')} WHERE id=? AND organization_id=?`, vals);
   await invalidateTaskListCache(req.user.org, task.assignee_id);
-  if (req.body.assigneeId && req.body.assigneeId !== task.assignee_id) await invalidateTaskListCache(req.user.org, req.body.assigneeId);
+  if (req.body.assigneeId && req.body.assigneeId !== task.assignee_id) 
+  await invalidateTaskListCache(req.user.org, req.body.assigneeId);
   res.json({ message: 'Task updated' });
 });
 
 export const changeStatus = asyncHandler(async (req, res) => {
-  const [[task]] = await pool.query('SELECT * FROM tasks WHERE id=? AND organization_id=?', [req.params.id, req.user.org]);
+  const [[task]] = await pool.query('SELECT * FROM tasks WHERE id=? AND organization_id=?', 
+                   [req.params.id, req.user.org]);
   if (!task) throw new AppError(404, 'TASK_NOT_FOUND', 'Task not found');
-  const canChange = req.user.role === 'MANAGER' || req.user.role === 'ADMIN' || task.assignee_id === Number(req.user.sub);
+
+  const canChange = req.user.role === 'MANAGER' || 
+                    req.user.role === 'ADMIN' || 
+                    task.assignee_id === Number(req.user.sub);
   if (!canChange) throw new AppError(403, 'FORBIDDEN', 'Only assignee or manager/admin can advance task status');
   const next = req.body.status;
 
-  if (!transitions[task.status].includes(next)) throw new AppError(400, 'INVALID_STATUS_TRANSITION', `Cannot change status from ${task.status} to ${next}`);
+  if (!transitions[task.status].includes(next)) 
+  throw new AppError(400, 'INVALID_STATUS_TRANSITION', `Cannot change status from ${task.status} to ${next}`);
+
   await pool.query('UPDATE tasks SET status=?, completed_at=? WHERE id=? AND organization_id=?', 
         [next, next === 'DONE' ? new Date() : null, req.params.id, req.user.org]);
 
@@ -132,8 +139,12 @@ export const changeStatus = asyncHandler(async (req, res) => {
 export const deleteTask = asyncHandler(async (req, res) => {
   const [[task]] = await pool.query('SELECT assignee_id FROM tasks WHERE id=? AND organization_id=?', 
                    [req.params.id, req.user.org]);
+
   if (!task) throw new AppError(404, 'TASK_NOT_FOUND', 'Task not found');
-  await pool.query('DELETE FROM tasks WHERE id=? AND organization_id=?', [req.params.id, req.user.org]);
+
+  await pool.query('DELETE FROM tasks WHERE id=? AND organization_id=?', 
+        [req.params.id, req.user.org]);
+
   await invalidateTaskListCache(req.user.org, task.assignee_id);
   res.json({ message: 'Task deleted' });
 });
@@ -142,9 +153,8 @@ export const analytics = asyncHandler(async (req, res) => {
   const [rows] = await pool.query(`
   SELECT u.id user_id, u.name, 
   COUNT(CASE WHEN t.due_date < NOW() AND t.status != 'DONE' THEN 1 END) overdue_count, 
-  AVG(CASE WHEN t.completed_at IS NOT NULL THEN TIMESTAMPDIFF(HOUR, 
-  t.created_at, 
-  t.completed_at) END) avg_completion_hours FROM users u 
+  AVG(CASE WHEN t.completed_at IS NOT NULL THEN TIMESTAMPDIFF(HOUR, t.created_at, t.completed_at) END) 
+  avg_completion_hours FROM users u 
   LEFT JOIN tasks t ON t.assignee_id=u.id WHERE u.organization_id=? GROUP BY u.id,u.name`, 
   [req.user.org]);
   res.json(rows);

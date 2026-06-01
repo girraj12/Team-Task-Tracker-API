@@ -15,6 +15,32 @@ export const listUsers = asyncHandler(async (req, res) => {
   res.json(rows);
 });
 
+export const getUser = asyncHandler(async (req, res) => {
+  const [[user]] = await pool.query(
+    `SELECT
+      id,
+      organization_id,
+      name,
+      email,
+      role,
+      created_at,
+      updated_at
+     FROM users
+     WHERE id=? AND organization_id=?`,
+    [req.params.id, req.user.org]
+  );
+
+  if (!user) {
+    throw new AppError(
+      404,
+      "USER_NOT_FOUND",
+      "User not found"
+    );
+  }
+
+  res.json(user);
+});
+
 export const updateUser = asyncHandler(async (req, res) => {
     console.log("data");
   const { id } = req.params;

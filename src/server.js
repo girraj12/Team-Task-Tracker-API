@@ -6,6 +6,7 @@ import { initializeRedis } from "./config/redis.js";
 import authRoutes from "./routes/auth.routes.js";
 import userRoutes from "./routes/user.routes.js"
 import projectRoutes from "./routes/project.routes.js"
+import taskRoutes from  "./routes/task.routes.js"
 
 const port = process.env.PORT || 3000;
 import { errorHandler, notFound } from "./middlewares/errorHandler.js";

@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { createUser, deleteUser, listUsers, updateUser } from '../controllers/user.controller.js';
+import { createUser, deleteUser, getUser, listUsers, updateUser } from '../controllers/user.controller.js';
 import { authenticate, allowRoles } from '../middlewares/auth.js';
 import { validate } from '../middlewares/validate.js';
 import { createUserSchema, updateUserSchema } from '../validators/user.validator.js';
@@ -7,6 +7,7 @@ const router = Router();
 router.use(authenticate, allowRoles('ADMIN'));
 router.post('/', validate(createUserSchema), createUser);
 router.get('/', listUsers);
+router.get('/:id',getUser)
 router.patch('/:id', validate(updateUserSchema), updateUser);
 router.delete('/:id', deleteUser);
 export default router;
